@@ -19,11 +19,17 @@
 	<properties>
 		<buildId>2</buildId>
 		<buildNumber>0</buildNumber>
-		<elasticsearch.version>1.5.1</elasticsearch.version>
+		<elasticsearch.version>2.2.0</elasticsearch.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20160212</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>

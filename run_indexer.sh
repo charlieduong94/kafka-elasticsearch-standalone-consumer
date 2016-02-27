@@ -2,16 +2,16 @@
 
 # Setup variables
 # GHANGE FOR YOUR ENV: absolute path of the indexer installation dir
-INDEXER_HOME=</your/indexer/install/dir>
+INDEXER_HOME=/home/charlie/Documents/kafka-elasticsearch-standalone-consumer
 
 # GHANGE FOR YOUR ENV: JDK 8 installation dir - you can skip it if your JAVA_HOME env variable is set
-JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home
+JAVA_HOME=/usr/lib/jvm/java-8-oracle
 
 # GHANGE FOR YOUR ENV: absolute path of the logback config file
-LOGBACK_CONFIG_FILE=</your/absolute/path/logback.xml>
+LOGBACK_CONFIG_FILE=/home/charlie/Documents/kafka-elasticsearch-standalone-consumer/src/main/resources/logback.xml
 
 # GHANGE FOR YOUR ENV: absolute path of the indexer properties file
-INDEXER_PROPERTIES_FILE=</your/absolute/path/kafka-es-indexer.properties>
+INDEXER_PROPERTIES_FILE=/home/charlie/Documents/kafka-elasticsearch-standalone-consumer/src/main/resources/kafka-es-indexer.properties
 
 # DO NOT CHANGE ANYTHING BELOW THIS POINT (unless you know what you are doing :) )!
 echo "Starting Kafka ES Indexer app ..."
@@ -28,7 +28,3 @@ done
 echo "CLASS_PATH=$CLASS_PATH"
 
 $JAVA_HOME/bin/java -Xmx1g -cp $CLASS_PATH -Dlogback.configurationFile=$LOGBACK_CONFIG_FILE org.elasticsearch.kafka.indexer.KafkaIndexerDriver $INDEXER_PROPERTIES_FILE
-
-
-
-

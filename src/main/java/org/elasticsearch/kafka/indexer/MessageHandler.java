@@ -14,7 +14,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.json.JSONObject;
 
 public abstract class MessageHandler {
 
@@ -23,7 +23,7 @@ public abstract class MessageHandler {
 	private ConsumerConfig config;
 	private BulkRequestBuilder bulkRequestBuilder;
 	private IndexHandler indexHandler;
-		
+
 	public MessageHandler(Client client,ConsumerConfig config) throws Exception{
 		this.esClient = client;
 		this.config = config;
@@ -44,7 +44,7 @@ public abstract class MessageHandler {
 		}
 		logger.info("Created Message Handler");
 	}
-	
+
 	public Client getEsClient() {
 		return esClient;
 	}
@@ -61,7 +61,7 @@ public abstract class MessageHandler {
 		this.bulkRequestBuilder = bulkReqBuilder;
 	}
 
-	
+
 	public boolean postToElasticSearch() throws Exception {
 		BulkResponse bulkResponse = null;
 		BulkItemResponse bulkItemResp = null;
@@ -69,7 +69,7 @@ public abstract class MessageHandler {
 		if(bulkRequestBuilder.numberOfActions() <= 0){
 			logger.warn("No messages to post to ElasticSearch - returning");
 			return true;
-		}		
+		}
 		try{
 			bulkResponse = bulkRequestBuilder.execute().actionGet();
 		}
@@ -79,7 +79,7 @@ public abstract class MessageHandler {
 		}
 		logger.debug("Time to post messages to ElasticSearch: {} ms", bulkResponse.getTookInMillis());
 		if(bulkResponse.hasFailures()){
-			logger.error("Bulk Message Post to ElasticSearch has errors: {}", 
+			logger.error("Bulk Message Post to ElasticSearch has errors: {}",
 					bulkResponse.buildFailureMessage());
 			int failedCount = 0;
 			Iterator<BulkItemResponse> bulkRespItr = bulkResponse.iterator();
@@ -91,15 +91,15 @@ public abstract class MessageHandler {
 					failedCount++;
 					String errorMessage = bulkItemResp.getFailure().getMessage();
 					String restResponse = bulkItemResp.getFailure().getStatus().name();
-					logger.error("Failed Message #{}, REST response:{}; errorMessage:{}", 
+					logger.error("Failed Message #{}, REST response:{}; errorMessage:{}",
 							failedCount, restResponse, errorMessage);
 					// TODO: there does not seem to be a way to get the actual failed event
 					// until it is possible - do not log anything into the failed events log file
 					//FailedEventsLogger.logFailedToPostToESEvent(restResponse, errorMessage);
-				} 					
-			}								
+				}
+			}
 			logger.info("# of failed to post messages to ElasticSearch: {} ", failedCount);
-			return false;				
+			return false;
 		}
 		logger.info("Bulk Post to ElasticSearch finished OK");
 		bulkRequestBuilder = null;
@@ -107,7 +107,7 @@ public abstract class MessageHandler {
 	}
 
 	public abstract byte[] transformMessage(byte[] inputMessage, Long offset) throws Exception;
-	
+
 	public long prepareForPostToElasticSearch(Iterator<MessageAndOffset> messageAndOffsetIterator){
 		bulkRequestBuilder = esClient.prepareBulk();
 		int numProcessedMessages = 0;
@@ -122,32 +122,52 @@ public abstract class MessageHandler {
 			byte[] bytesMessage = new byte[payload.limit()];
 			payload.get(bytesMessage);
 			byte[] transformedMessage;
+			JSONObject json;
 			try {
 				transformedMessage = this.transformMessage(bytesMessage, messageAndOffset.offset());
+				json = new JSONObject(new String(transformedMessage));
 			} catch (Exception e) {
 				String msgStr = new String(bytesMessage);
-				logger.error("ERROR transforming message at offset={} - skipping it: {}", 
+				logger.error("ERROR transforming message at offset={} - skipping it: {}",
 						messageAndOffset.offset(), msgStr, e);
 				FailedEventsLogger.logFailedToTransformEvent(
 						messageAndOffset.offset(), e.getMessage(), msgStr);
 				continue;
 			}
-			this.getBuildReqBuilder().add(
-				esClient.prepareIndex(
-					indexHandler.getIndexName(null), indexHandler.getIndexType(null))
-					.setSource(transformedMessage)
-			);
+
+			// add to request
+			try{
+				switch(json.get("action").toString()){
+					case "delete":
+						this.getBuildReqBuilder().add(
+							esClient.prepareDelete(
+								json.getString("index"), json.getString("type"), json.getString("id"))
+						);
+						break;
+					case "index":
+					case "update":
+						this.getBuildReqBuilder().add(
+							esClient.prepareUpdate(
+								json.getString("index"), json.getString("type"), json.getString("id"))
+								.setDoc(json.getJSONObject("body").toString()).setDocAsUpsert(true)
+						);
+	 			}
+			}
+			catch (Exception e){
+				logger.error(e.getMessage());
+			}
 			numProcessedMessages++;
 		}
-		logger.info("Total # of messages in this batch: {}; " + 
-			"# of successfully transformed and added to Index messages: {}; offsetOfNextBatch: {}", 
+		logger.info("Total # of messages in this batch: {}; " +
+			"# of successfully transformed and added to Index messages: {}; offsetOfNextBatch: {}",
 			numMessagesInBatch, numProcessedMessages, offsetOfNextBatch);
 		return offsetOfNextBatch;
 	}
+
 
 	public IndexHandler getIndexHandler() {
 		return indexHandler;
 	}
 
-	
+
 }
