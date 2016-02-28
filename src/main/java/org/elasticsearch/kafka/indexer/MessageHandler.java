@@ -134,9 +134,10 @@ public abstract class MessageHandler {
 						messageAndOffset.offset(), e.getMessage(), msgStr);
 				continue;
 			}
-
+			logger.info(json.toString());
 			// add to request
 			try{
+				logger.info(json.get("action").toString());
 				switch(json.get("action").toString()){
 					case "delete":
 						this.getBuildReqBuilder().add(
@@ -144,17 +145,21 @@ public abstract class MessageHandler {
 								json.getString("index"), json.getString("type"), json.getString("id"))
 						);
 						break;
-					case "index":
+					case "create":
 					case "update":
 						this.getBuildReqBuilder().add(
 							esClient.prepareUpdate(
 								json.getString("index"), json.getString("type"), json.getString("id"))
 								.setDoc(json.getJSONObject("body").toString()).setDocAsUpsert(true)
 						);
+						break;
+					default:
+						logger.error("Action '{}' was recieved'", json.get("action").toString());
 	 			}
 			}
 			catch (Exception e){
 				logger.error(e.getMessage());
+				continue;
 			}
 			numProcessedMessages++;
 		}
