@@ -25,7 +25,7 @@
 
 ### How to format a message
 
-Send messages to the consumer as JSON. You can specify the action for Elasticsearch to perform as well as the id, index and type that will be affected. The format is somewhat similar to how Elastic's Bulk API works, but the document to created or updated is wrapped in JSON.
+Send messages to the consumer as JSON. You can specify the action for Elasticsearch to perform as well as the id, index and type that will be affected. The format is somewhat similar to how Elastic's Bulk API works, but the document to be created or updated is wrapped in JSON.
 
 Currently, the supported actions are `create`, `delete`, and `update`.
 
