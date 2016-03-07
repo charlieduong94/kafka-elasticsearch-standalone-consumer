@@ -1,13 +1,13 @@
-# Welcome to the kafka-elasticsearch-standalone-consumer wiki!
+# kafka-elasticsearch-standalone-consumer
 
-## Architecture of the kafka-elasticsearch-standalone-consumer [indexer]
+## Architecture of the kafka-elasticsearch-standalone-consumer
 
 ![](https://raw.githubusercontent.com/ppine7/kafka-elasticsearch-standalone-consumer/master/img/IndexerV2Design.jpg)
 
 
 # Introduction
 
-### **Kafka Standalone Consumer [Indexer] will read messages from Kafka, in batches, process and bulk-index them into ElasticSearch.**
+### **Kafka Standalone Consumer will read messages from Kafka, in batches, process and send them in bulk to ElasticSearch.**
 
 ### _As described in the illustration above, here is how the indexer works:_
 
@@ -23,8 +23,24 @@
 
 * when a new partition is added to the kafka topic - configuration has to be updated and the indexer application has to be restarted
 
+### How to format a message
 
-# How to use ? 
+Send messages to the consumer as JSON. You can specify the action for Elasticsearch to perform as well as the id, index and type that will be affected. The format is somewhat similar to how Elastic's Bulk API works, but the document to be created or updated is wrapped in JSON.
+
+Currently, the supported actions are `create`, `delete`, and `update`.
+
+	{
+		"action" : "create",
+		"index" : "myindex",
+		"type" : "mytype",
+		"id" : "mydocid",
+		"body" : {
+			"title" : "This is a doc"
+		}
+	}
+
+
+# Usage
 
 ### Running as a standard Jar 
 
@@ -39,10 +55,10 @@
 	
  adjust values of max sizes and number of log files as needed
 
-**4. build/create the app jar (make sure you have MAven installed):
+**4. build/create the app jar (you can use the Maven wrapper included in the project):
 
 		cd $INDEXER_HOME
-     	mvn clean package
+     	./mvn clean package
      	
  The kafka-es-indexer-2.0.jar will be created in the $INDEXER_HOME/bin.
  All dependencies will be placed into $INDEXER_HOME/bin/lib.
@@ -60,7 +76,7 @@
 
 ### Kafka Version: 0.8.2.1
 
-### ElasticSearch: > 1.5.1
+### ElasticSearch: 2.2.0
 
 ### Scala Version for Kafka Build: 2.10.0
 
@@ -116,3 +132,4 @@ kafka-elasticsearch-standalone-consumer
  - [Krishna Raj](https://github.com/reachkrishnaraj)
  - [Marina Popova](https://github.com/ppine7)
  - [Dhyan ](https://github.com/dhyan-yottaa)
+ - [Charlie Duong](https://github.com/charlieduong94)
