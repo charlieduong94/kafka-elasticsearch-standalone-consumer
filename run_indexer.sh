@@ -2,7 +2,7 @@
 
 # Setup variables
 # GHANGE FOR YOUR ENV: absolute path of the indexer installation dir
-INDEXER_HOME=/home/charlie/Documents/projects/kafka-elasticsearch-standalone-consumer
+INDEXER_HOME=/consumer
 
 # GHANGE FOR YOUR ENV: JDK 8 installation dir - you can skip it if your JAVA_HOME env variable is set
 #JAVA_HOME=/usr/lib/jvm/java-8-oracle
